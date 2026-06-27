@@ -1,190 +1,136 @@
 # Flowchart Maker
 
-Flowchart Maker is a Codex skill for creating, refining, validating, and exporting flowcharts, process diagrams, workflow diagrams, system flows, Mermaid diagrams, HTML flowcharts, SVG-style diagrams, PPT-ready diagrams, and whiteboard-style diagrams.
+Flowchart Maker 是一个用于生成、修改、验证和导出流程图的 Codex skill。它适合处理流程图、工作流图、系统流程、Mermaid 图、HTML 流程图、SVG 风格图、PPT 配图和白板风格图。
 
-It uses a two-layer workflow:
+它采用两层工作方式：
 
-- Mermaid as the logic source.
-- HTML/CSS as the presentation layer for polished layout, editing, export, and visual QA.
+- Mermaid 作为逻辑源，适合快速描述节点和关系。
+- HTML/CSS 作为表现层，负责精细排版、可编辑交互、导出和视觉检查。
 
-## What It Creates
+## 能做什么
 
-- Mermaid source files for documentation and fast iteration.
-- Editable HTML diagrams with draggable nodes and editable labels.
-- Static HTML, PNG, SVG, or PPT-ready image exports.
-- Interactive diagrams for demos, training, and clickable explanation flows.
+- 生成 Mermaid 源文件，方便放进文档和知识库。
+- 生成可编辑 HTML 流程图，支持拖拽节点、编辑文字和调整箭头。
+- 导出静态 HTML、PNG、SVG 或 PPT 可用图片。
+- 生成用于演示、培训、说明页的交互式流程图。
 
-## Visual Styles
+## 主题风格
 
-### `sketch`
+目前支持 10 种主题。主题名使用英文调用，中文名用于识别风格。
 
-Default style.
+### 🎨 sketch：手绘漫画白板风
 
-![Sketch style example](docs/images/sketch-example.png)
+偏手绘白板风，适合概念解释、知识卡片、教学图、小红书图文。
 
-Use for:
+![sketch 手绘漫画白板风](docs/images/sketch.png)
 
-- Concept explanation.
-- Knowledge cards.
-- Teaching and onboarding.
-- Personal knowledge-base diagrams.
-- Whiteboard-style discussions.
+### ⬛ mono：黑白线框风
 
-Visual character:
+偏黑白线框风，适合技术文档、README、工程说明、简洁流程图。
 
-- Hand-drawn whiteboard feel.
-- Casual lines and soft shadows.
-- Colorful category accents such as purple, blue, green, amber, orange, and teal.
-- Friendly, low-reading-burden composition.
+![mono 黑白线框风](docs/images/mono.png)
 
-Avoid:
+### 🧊 glass：半透明科技风
 
-- Dense enterprise boxes.
-- Heavy section frames.
-- Big black title bars.
-- Formal architecture-page composition.
+偏半透明科技风，适合 AI 平台、产品架构、控制台、自动化流程图。
 
-### `mono`
+![glass 半透明科技风](docs/images/glass.png)
 
-Use for minimal technical diagrams.
+### 📊 formal：正式架构汇报风
 
-![Mono style example](docs/images/mono-example.png)
+偏正式架构图，适合汇报材料、PPT、平台方案、系统关系图。
 
-Use for:
+![formal 正式架构汇报风](docs/images/formal.png)
 
-- Technical documentation.
-- README diagrams.
-- Engineering explanations.
-- Draw.io-like neutral diagrams.
-- Black-and-white process diagrams.
+### 📐 blueprint：工程蓝图风
 
-Visual character:
+偏工程蓝图风，适合系统架构、数据流、模块关系、技术设计说明。
 
-- Plain page background.
-- Black-and-white wireframe style.
-- Single-border rectangular nodes.
-- Small solid black arrowheads.
-- Dashed gray lines for feedback or secondary flows.
-- Editable HTML workflow with save, reset, JSON export, and PNG export.
+![blueprint 工程蓝图风](docs/images/blueprint.png)
 
-Avoid:
+### 🌈 neon：赛博霓虹风
 
-- Grid backgrounds unless explicitly requested.
-- Decorative colors.
-- Hand-drawn fonts or comic-style elements.
-- Static-only HTML when manual editing is expected.
+偏赛博霓虹风，适合 AI、MCP、自动化、技术传播和概念海报。
 
-### `formal`
+![neon 赛博霓虹风](docs/images/neon.png)
 
-Use for official or enterprise-facing materials.
+### 📰 editorial：杂志编辑风
 
-![Formal style example](docs/images/formal-example.png)
+偏杂志编辑风，适合方法论拆解、观点表达、报告开篇、知识专题图。
 
-Use for:
+![editorial 杂志编辑风](docs/images/editorial.png)
 
-- Leadership reports.
-- Enterprise solution pages.
-- PPT-ready architecture diagrams.
-- Formal delivery documents.
-- Platform relationship diagrams.
+### 🍬 pastel：柔和彩色风
 
-Visual character:
+偏柔和彩色风，适合产品说明、用户流程、轻量培训、内部宣导材料。
 
-- Precise grids.
-- Clean rectangular cards.
-- Consistent alignment.
-- Restrained palette.
-- Clear hierarchy and domain classification.
+![pastel 柔和彩色风](docs/images/pastel.png)
 
-Avoid:
+### 🧱 brutal：粗黑高对比风
 
-- Excessive hand-drawn looseness.
-- Cartoon-like composition.
-- Casual visual jokes.
+偏粗黑高对比风，适合关键结论、冲突对比、传播海报、强表达内容。
 
-## Delivery Modes
+![brutal 粗黑高对比风](docs/images/brutal.png)
+
+### 🌑 dark：深色专业风
+
+偏深色专业风，适合技术汇报、架构说明、正式材料、深色演示页面。
+
+![dark 深色专业风](docs/images/dark.png)
+
+## 交付模式
 
 ### `mermaid`
 
-Best for:
-
-- Knowledge bases.
-- Docs.
-- Version control.
-- Fast logic iteration.
-
-Output:
-
-- `.mmd`
-- Markdown with Mermaid block.
+适合知识库、文档、版本管理和快速逻辑迭代。输出通常是 `.mmd` 或包含 Mermaid 代码块的 Markdown。
 
 ### `editable`
 
-Best when users need to manually correct layout, arrows, or wording.
+适合需要手动微调的流程图。支持：
 
-Capabilities:
-
-- Drag nodes.
-- Edit node text.
-- Edit edge labels.
-- Rerender arrows automatically.
-- Save local edits.
-- Reset to default.
-- Export JSON.
-- Export PNG.
-
-For `sketch + editable`, the skill starts from `assets/editable-flowchart-template.html`.
-
-For `mono + editable`, the skill starts from `assets/mono-editable-flowchart-template.html`.
+- 拖拽节点
+- 编辑节点文字
+- 编辑边标签
+- 拖动或编辑后自动重绘箭头
+- 保存本地编辑
+- 重置为默认状态
+- 导出 JSON
+- 导出 PNG
 
 ### `static`
 
-Best for final delivery after layout is accepted.
-
-Output can include:
-
-- HTML
-- PNG
-- SVG
-- PPT-ready image
+适合布局确认后的最终交付。可输出 HTML、PNG、SVG 或 PPT 可用图片。
 
 ### `interactive`
 
-Best for:
+适合产品演示、培训说明、可点击解释流程和交互式页面。
 
-- Demos.
-- Training.
-- Clickable explanations.
-- Product-like walkthroughs.
+## 常用组合
 
-## Common Combinations
-
-| Combination | Use Case |
+| 组合 | 适用场景 |
 |---|---|
-| `sketch + editable` | Concept diagrams, teaching diagrams, knowledge cards that may need manual adjustment |
-| `sketch + static` | Final whiteboard-style image for sharing or publishing |
-| `mono + editable` | Technical docs, README diagrams, engineering process diagrams that need manual adjustment |
-| `mono + static` | Final black-and-white wireframe image for docs or architecture notes |
-| `formal + editable` | Architecture draft that needs manual adjustment before delivery |
-| `formal + static` | Final leadership-report or PPT-ready architecture diagram |
-| `formal + interactive` | Product demo or training walkthrough with formal visual language |
+| `sketch + editable` | 概念图、教学图、知识卡片，需要后续手动调整 |
+| `mono + editable` | 技术文档、README、工程流程，需要保持极简 |
+| `glass + editable` | AI 平台、自动化、控制台、产品架构展示 |
+| `formal + static` | 汇报材料、PPT、正式架构图 |
+| `blueprint + editable` | 系统架构、数据流、模块关系 |
+| `neon + static` | AI、MCP、自动化主题传播图 |
+| `editorial + static` | 方法论、观点图、报告开篇 |
+| `pastel + editable` | 产品说明、用户流程、轻量培训 |
+| `brutal + static` | 关键结论、强对比、传播海报 |
+| `dark + static` | 深色技术汇报、正式说明、架构图 |
 
-## Workflow
+## 工作流程
 
-1. Clarify only missing essentials: purpose, output format, and required style constraints.
-2. Create or update Mermaid logic first when the flow is unclear.
-3. Convert accepted logic into HTML when better layout or visual quality is needed.
-4. Use the editable template for `sketch + editable` diagrams.
-5. Check layout quality before completion:
-   - no overlapping nodes
-   - no visible text overflow
-   - arrows do not cross important text
-   - grouped containers have enough padding
-   - long labels wrap cleanly
-   - feedback loops are visible
-6. Export or return the requested files.
+1. 先确认必要信息：用途、输出格式、风格要求。
+2. 流程逻辑不明确时，先写 Mermaid 版本确认结构。
+3. 需要更好排版或视觉质量时，再转成 HTML 版本。
+4. `sketch`、`mono`、`glass` 有独立可编辑模板。
+5. `blueprint`、`neon`、`editorial`、`pastel`、`brutal`、`dark` 复用稳定可编辑骨架，再套主题样式。
+6. 多主题输出时，每个主题单独生成一个 HTML，不默认合成一个总览页。
+7. 完成前检查：节点不重叠、文字不溢出、箭头不遮挡文字、反馈路径可见、菱形文字居中。
 
-## File Layout
+## 文件结构
 
 ```text
 flowchart-maker/
@@ -196,18 +142,26 @@ flowchart-maker/
     flowchart-template.html
     editable-flowchart-template.html
     mono-editable-flowchart-template.html
+    glass-editable-flowchart-template.html
   docs/
     images/
-      sketch-example.png
-      mono-example.png
-      formal-example.png
+      sketch.png
+      mono.png
+      glass.png
+      formal.png
+      blueprint.png
+      neon.png
+      editorial.png
+      pastel.png
+      brutal.png
+      dark.png
   scripts/
     check_flowchart_html.py
 ```
 
-## Default Output Pattern
+## 默认输出目录
 
-For generated diagrams, use a task-specific folder:
+生成流程图时，建议放在当前项目下的任务目录中：
 
 ```text
 output/flowcharts/<slug>/
@@ -218,20 +172,22 @@ output/flowcharts/<slug>/
   <slug>.svg
 ```
 
-Only create export files that are requested or needed for delivery.
+只生成用户需要或交付必要的文件。
 
-## Validation
+## 质量检查
 
-For important HTML diagrams, preview the rendered output through browser automation or QuickLook and check:
+重要 HTML 流程图需要预览渲染效果，重点检查：
 
-- chart is not blank
-- all nodes are visible
-- no node overlaps another node
-- text is not clipped
-- arrows are visible and connected to the intended node edges
-- feedback arrows are readable
+- 页面不是空白
+- 所有节点可见
+- 节点之间没有重叠
+- 文字没有被裁切
+- 箭头连接到正确节点边界
+- 反馈箭头足够清楚
+- 菱形判断框内文字居中
+- 可编辑版本保留保存、重置、导出 JSON、导出 PNG
 
-If rendered preview is unavailable, run:
+如果无法渲染预览，至少运行静态检查：
 
 ```bash
 python3 scripts/check_flowchart_html.py <flowchart.html>
