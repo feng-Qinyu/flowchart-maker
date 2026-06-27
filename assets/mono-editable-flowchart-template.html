@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editable Mono Agent Flow</title>
+  <style>
+    :root {
+      --paper: #fafafa;
+      --ink: #151515;
+      --muted: #4e4e4e;
+      --soft: #f4f4f4;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Avenir Next", "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+      word-break: keep-all;
+      user-select: none;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    .canvas {
+      position: relative;
+      width: 1920px;
+      height: 1056px;
+      transform-origin: center;
+      background: var(--paper);
+    }
+
+    svg#edges {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .runtime-boundary {
+      position: absolute;
+      left: 500px;
+      top: 410px;
+      width: 850px;
+      height: 300px;
+      border: 2px solid var(--ink);
+      background: rgba(255, 255, 255, .38);
+      z-index: 0;
+    }
+
+    .runtime-title {
+      position: absolute;
+      left: 530px;
+      top: 390px;
+      z-index: 3;
+      padding: 7px 14px;
+      color: var(--ink);
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      font-size: 21px;
+      font-weight: 800;
+      line-height: 1;
+      white-space: nowrap;
+      cursor: text;
+      user-select: text;
+    }
+
+    .runtime-title:focus {
+      outline: none;
+      background: #fff9c9;
+    }
+
+    .node {
+      position: absolute;
+      min-height: 78px;
+      padding: 16px 18px;
+      color: var(--ink);
+      background: #fff;
+      border: 2px solid var(--ink);
+      border-radius: 2px;
+      cursor: grab;
+      z-index: 2;
+    }
+
+    .node.dragging {
+      cursor: grabbing;
+      opacity: .92;
+      z-index: 5;
+    }
+
+    .node h2 {
+      margin: 0 0 8px;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.08;
+      font-weight: 800;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .node p,
+    .node li {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.52;
+      white-space: nowrap;
+    }
+
+    .node ul {
+      margin: 0;
+      padding-left: 19px;
+    }
+
+    .node [contenteditable="true"],
+    .runtime-title[contenteditable="true"] {
+      user-select: text;
+      cursor: text;
+      outline: none;
+      border-radius: 2px;
+    }
+
+    .node [contenteditable="true"]:focus,
+    .runtime-title[contenteditable="true"]:focus,
+    .edge-label:focus {
+      background: #fff9c9;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, .08);
+    }
+
+    .diamond {
+      width: 146px;
+      height: 146px;
+      min-height: 146px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      display: grid;
+      place-items: center;
+    }
+
+    .diamond-shape {
+      position: absolute;
+      inset: 0;
+      width: 146px;
+      height: 146px;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 1;
+    }
+
+    .diamond h2 {
+      position: relative;
+      z-index: 2;
+      width: 124px;
+      margin: 0;
+      text-align: center;
+      line-height: 1.15;
+      white-space: normal;
+    }
+
+    .edge {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .edge.dashed {
+      stroke: var(--muted);
+      stroke-width: 2.2;
+      stroke-dasharray: 7 8;
+    }
+
+    .edge-label {
+      position: absolute;
+      z-index: 3;
+      min-width: 24px;
+      padding: 2px 6px;
+      color: var(--ink);
+      background: var(--paper);
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1;
+      text-align: center;
+      cursor: text;
+      user-select: text;
+    }
+
+    .toolbar {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .toolbar button {
+      border: 1px solid rgba(0, 0, 0, .22);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .92);
+      color: var(--ink);
+      padding: 7px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .08);
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas" id="canvas">
+    <svg id="edges" viewBox="0 0 1920 1056" aria-hidden="true">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="7.2" refY="4" orient="auto" markerUnits="strokeWidth">
+          <path d="M1,1 L7.2,4 L1,7 Z" fill="#151515" stroke="none"></path>
+        </marker>
+        <marker id="arrowMuted" markerWidth="8" markerHeight="8" refX="7.2" refY="4" orient="auto" markerUnits="strokeWidth">
+          <path d="M1,1 L7.2,4 L1,7 Z" fill="#4e4e4e" stroke="none"></path>
+        </marker>
+      </defs>
+    </svg>
+
+    <div class="runtime-boundary" id="runtimeBoundary"></div>
+    <div class="runtime-title" id="runtimeTitle" contenteditable="true">Agent Runtime：工程承载层</div>
+
+    <article class="node" id="input" style="left:250px; top:140px; width:270px;">
+      <h2 contenteditable="true">用户输入</h2>
+      <p contenteditable="true">帮我修好保存按钮</p>
+    </article>
+
+    <article class="node" id="goal" style="left:600px; top:140px; width:240px;">
+      <h2 contenteditable="true">Goal</h2>
+      <p contenteditable="true">修好保存按钮</p>
+    </article>
+
+    <article class="node" id="plan" style="left:925px; top:112px; width:280px;">
+      <h2 contenteditable="true">Plan：拆路线</h2>
+      <ul>
+        <li contenteditable="true">找组件</li>
+        <li contenteditable="true">查事件</li>
+        <li contenteditable="true">改代码</li>
+        <li contenteditable="true">跑测试</li>
+      </ul>
+    </article>
+
+    <article class="node" id="react" style="left:1310px; top:140px; width:330px;">
+      <h2 contenteditable="true">ReAct 循环</h2>
+      <p contenteditable="true">Reason → Act → Observe → Reason</p>
+    </article>
+
+    <article class="node" id="toolcall" style="left:1310px; top:300px; width:330px;">
+      <h2 contenteditable="true">Tool Call：动作指令</h2>
+      <p contenteditable="true">read_file / edit_file / run_tests</p>
+    </article>
+
+    <article class="node" id="context" style="left:545px; top:480px; width:235px;">
+      <h2 contenteditable="true">Context 管理</h2>
+      <p contenteditable="true">Goal / Plan / 历史结果</p>
+    </article>
+
+    <article class="node" id="executor" style="left:810px; top:480px; width:255px;">
+      <h2 contenteditable="true">执行器</h2>
+      <p contenteditable="true">读取 Tool Call 并调用工具</p>
+    </article>
+
+    <article class="node" id="state" style="left:1095px; top:480px; width:225px;">
+      <h2 contenteditable="true">状态控制</h2>
+      <p contenteditable="true">权限 / 预算 / 超时 / 日志</p>
+    </article>
+
+    <article class="node" id="observation" style="left:810px; top:615px; width:270px;">
+      <h2 contenteditable="true">Observation 回填</h2>
+      <p contenteditable="true">把工具结果塞回 Context</p>
+    </article>
+
+    <article class="node" id="tool" style="left:1420px; top:500px; width:250px;">
+      <h2 contenteditable="true">真实工具 / 业务系统</h2>
+      <p contenteditable="true">文件 / 浏览器 / 数据库 / API / 测试</p>
+    </article>
+
+    <article class="node" id="final" style="left:1180px; top:795px; width:360px;">
+      <h2 contenteditable="true">Final Answer</h2>
+      <p contenteditable="true">任务完成后输出结果</p>
+    </article>
+
+    <div class="edge-label" id="label-runtime" contenteditable="true" style="left:1110px; top:380px;">进入 Runtime</div>
+    <div class="edge-label" id="label-feedback" contenteditable="true" style="left:930px; top:760px;">结果回填</div>
+  </div>
+
+  <div class="toolbar">
+    <button id="saveBtn">保存</button>
+    <button id="resetBtn">重置</button>
+    <button id="exportBtn">导出 JSON</button>
+    <button id="exportPngBtn">导出 PNG</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const svg = document.getElementById("edges");
+    const STORAGE_KEY = "agent-flow-mono-editable-v1";
+    const edges = [
+      ["input", "goal", "normal"],
+      ["goal", "plan", "normal"],
+      ["plan", "react", "normal"],
+      ["react", "toolcall", "normal"],
+      ["toolcall", "executor", "normal"],
+      ["context", "executor", "normal"],
+      ["executor", "state", "normal"],
+      ["state", "observation", "normal"],
+      ["observation", "context", "normal"],
+      ["state", "tool", "normal"],
+      ["tool", "observation", "dashed"],
+      ["context", "react", "dashed"],
+      ["react", "final", "normal"]
+    ];
+
+    function scaleCanvas() {
+      const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1056);
+      canvas.style.transform = `scale(${scale})`;
+    }
+
+    function rect(id) {
+      const el = document.getElementById(id);
+      return {
+        el,
+        x: parseFloat(el.style.left),
+        y: parseFloat(el.style.top),
+        w: el.offsetWidth,
+        h: el.offsetHeight
+      };
+    }
+
+    function port(r, side) {
+      if (side === "left") return [r.x, r.y + r.h / 2];
+      if (side === "right") return [r.x + r.w, r.y + r.h / 2];
+      if (side === "top") return [r.x + r.w / 2, r.y];
+      return [r.x + r.w / 2, r.y + r.h];
+    }
+
+    function outsidePort(r, side, gap = 2) {
+      const [x, y] = port(r, side);
+      if (side === "left") return [x - gap, y];
+      if (side === "right") return [x + gap, y];
+      if (side === "top") return [x, y - gap];
+      return [x, y + gap];
+    }
+
+    function sides(a, b) {
+      const dx = b.x + b.w / 2 - (a.x + a.w / 2);
+      const dy = b.y + b.h / 2 - (a.y + a.h / 2);
+      if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? ["right", "left"] : ["left", "right"];
+      return dy > 0 ? ["bottom", "top"] : ["top", "bottom"];
+    }
+
+    function pathBetween(a, b, kind, from, to) {
+      const sourceSide = from || sides(a, b)[0];
+      const targetSide = to || sides(a, b)[1];
+      const s = outsidePort(a, sourceSide);
+      const t = outsidePort(b, targetSide);
+
+      if (kind === "dashed" && a.el.id === "tool" && b.el.id === "observation") {
+        return `M${s[0]},${s[1]} C${s[0] + 80},${s[1] + 140} ${t[0] + 150},${t[1] + 128} ${t[0]},${t[1]}`;
+      }
+      if (kind === "dashed" && a.el.id === "context" && b.el.id === "react") {
+        return `M${s[0]},${s[1]} C${s[0] - 120},${s[1] - 330} ${t[0] - 190},${t[1] + 120} ${t[0]},${t[1]}`;
+      }
+      if (a.el.id === "toolcall" && b.el.id === "executor") {
+        return `M${s[0]},${s[1]} C${s[0] - 160},${s[1] + 90} ${t[0] + 120},${t[1] - 92} ${t[0]},${t[1]}`;
+      }
+      if (a.el.id === "react" && b.el.id === "final") {
+        return `M${s[0]},${s[1]} C${s[0] + 90},${s[1] + 320} ${t[0] + 50},${t[1] - 140} ${t[0]},${t[1]}`;
+      }
+
+      if (sourceSide === "right" || sourceSide === "left") {
+        const mx = (s[0] + t[0]) / 2;
+        return `M${s[0]},${s[1]} C${mx},${s[1]} ${mx},${t[1]} ${t[0]},${t[1]}`;
+      }
+      const my = (s[1] + t[1]) / 2;
+      return `M${s[0]},${s[1]} C${s[0]},${my} ${t[0]},${my} ${t[0]},${t[1]}`;
+    }
+
+    function renderEdges() {
+      [...svg.querySelectorAll("path.edge")].forEach(p => p.remove());
+      for (const [from, to, kind] of edges) {
+        const a = rect(from);
+        const b = rect(to);
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("class", `edge ${kind === "dashed" ? "dashed" : ""}`);
+        p.setAttribute("d", pathBetween(a, b, kind));
+        p.setAttribute("marker-end", kind === "dashed" ? "url(#arrowMuted)" : "url(#arrow)");
+        svg.appendChild(p);
+      }
+    }
+
+    function makeDraggable(node) {
+      let start = null;
+      node.addEventListener("pointerdown", (event) => {
+        if (event.target.closest("[contenteditable='true']")) return;
+        const scale = canvas.getBoundingClientRect().width / 1920;
+        start = {
+          x: event.clientX,
+          y: event.clientY,
+          left: parseFloat(node.style.left),
+          top: parseFloat(node.style.top),
+          scale
+        };
+        node.classList.add("dragging");
+        node.setPointerCapture(event.pointerId);
+      });
+      node.addEventListener("pointermove", (event) => {
+        if (!start) return;
+        const left = start.left + (event.clientX - start.x) / start.scale;
+        const top = start.top + (event.clientY - start.y) / start.scale;
+        node.style.left = `${Math.max(0, Math.min(1900 - node.offsetWidth, left))}px`;
+        node.style.top = `${Math.max(0, Math.min(1040 - node.offsetHeight, top))}px`;
+        renderEdges();
+      });
+      node.addEventListener("pointerup", () => {
+        start = null;
+        node.classList.remove("dragging");
+      });
+    }
+
+    function collectState() {
+      return {
+        nodes: [...document.querySelectorAll(".node")].map(node => ({
+          id: node.id,
+          left: node.style.left,
+          top: node.style.top,
+          html: node.innerHTML
+        })),
+        labels: [...document.querySelectorAll(".edge-label, .runtime-title")].map(label => ({
+          id: label.id,
+          left: label.style.left,
+          top: label.style.top,
+          text: label.textContent
+        }))
+      };
+    }
+
+    function applyState(state) {
+      if (!state) return;
+      for (const item of state.nodes || []) {
+        const node = document.getElementById(item.id);
+        if (!node) continue;
+        node.style.left = item.left;
+        node.style.top = item.top;
+        node.innerHTML = item.html;
+      }
+      for (const item of state.labels || []) {
+        const label = document.getElementById(item.id);
+        if (!label) continue;
+        label.style.left = item.left;
+        label.style.top = item.top;
+        label.textContent = item.text;
+      }
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+    }
+
+    function inlineStyles(source, clone) {
+      const sourceEls = [source, ...source.querySelectorAll("*")];
+      const cloneEls = [clone, ...clone.querySelectorAll("*")];
+      sourceEls.forEach((sourceEl, index) => {
+        const cloneEl = cloneEls[index];
+        if (!cloneEl || !(sourceEl instanceof Element)) return;
+        const computed = getComputedStyle(sourceEl);
+        cloneEl.setAttribute("style", Array.from(computed).map(name => `${name}:${computed.getPropertyValue(name)}`).join(";"));
+      });
+    }
+
+    async function exportPng() {
+      save();
+      renderEdges();
+
+      const clone = canvas.cloneNode(true);
+      clone.style.transform = "none";
+      clone.style.position = "relative";
+      clone.style.left = "0";
+      clone.style.top = "0";
+      inlineStyles(canvas, clone);
+
+      const foreign = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1056" viewBox="0 0 1920 1056">
+          <foreignObject width="1920" height="1056">
+            <div xmlns="http://www.w3.org/1999/xhtml">${clone.outerHTML}</div>
+          </foreignObject>
+        </svg>`;
+
+      const svgBlob = new Blob([foreign], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = url;
+      });
+
+      const canvasEl = document.createElement("canvas");
+      canvasEl.width = 1920;
+      canvasEl.height = 1056;
+      const ctx = canvasEl.getContext("2d");
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--paper").trim() || "#fafafa";
+      ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+
+      const pngUrl = canvasEl.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = pngUrl;
+      a.download = "agent-flow-mono.png";
+      a.click();
+    }
+
+    document.querySelectorAll(".node").forEach(makeDraggable);
+    document.querySelectorAll("[contenteditable='true']").forEach(el => {
+      el.addEventListener("input", renderEdges);
+      el.addEventListener("blur", save);
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", save);
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    });
+    document.getElementById("exportBtn").addEventListener("click", async () => {
+      const text = JSON.stringify(collectState(), null, 2);
+      await navigator.clipboard.writeText(text);
+      alert("已复制 JSON 到剪贴板");
+    });
+    document.getElementById("exportPngBtn").addEventListener("click", () => {
+      exportPng().catch(error => {
+        console.error(error);
+        alert("导出 PNG 失败，请先保存后刷新页面再试。");
+      });
+    });
+
+    applyState(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
+    window.addEventListener("resize", scaleCanvas);
+    scaleCanvas();
+    renderEdges();
+  </script>
+</body>
+</html>

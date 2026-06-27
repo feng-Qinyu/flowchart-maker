@@ -24,7 +24,8 @@ Use this skill when the user wants a flowchart that can be corrected, reflowed, 
 3. If the logic is ambiguous, ask the user to verify the Mermaid-level flow before visual polishing.
 4. Convert the accepted flow into an HTML presentation version when the user needs better layout or visual quality.
 5. For `sketch` + `editable` HTML flowcharts, start from `assets/editable-flowchart-template.html` unless the user asks for a different implementation. Replace the nodes, initial positions, labels, and edge list while preserving the template's editing, dragging, shape-aware ports, solid arrowheads, save/reset/export PNG/export JSON controls, and internal workspace whitespace.
-6. Before completion, check layout quality:
+6. For `mono` + `editable` HTML flowcharts, start from `assets/mono-editable-flowchart-template.html`. Preserve editability, dragging, auto-rerendered arrows, save/reset/export PNG/export JSON controls, plain browser background, black/gray linework, and no grid background.
+7. Before completion, check layout quality:
    - no overlapping nodes
    - no visible text overflow
    - arrows do not cross important text
@@ -32,8 +33,8 @@ Use this skill when the user wants a flowchart that can be corrected, reflowed, 
    - long labels wrap cleanly
    - narrow screens either remain readable or use horizontal scrolling
    - the main loop or feedback path is visible
-7. If layout fails, adjust positions, dimensions, wrapping, or grouping and check again.
-8. Return local paths for created files and state what was verified.
+8. If layout fails, adjust positions, dimensions, wrapping, or grouping and check again.
+9. Return local paths for created files and state what was verified.
 
 ## User and AI Division
 
@@ -58,6 +59,7 @@ Choose one visual style and one delivery mode unless the user asks for compariso
 Visual styles:
 
 - `sketch`: default. Hand-drawn comic whiteboard style for concept explanation, knowledge cards, teaching, and personal knowledge-base diagrams.
+- `mono`: black-and-white wireframe style for technical docs, README diagrams, engineering explanations, and draw.io-like neutral diagrams.
 - `formal`: professional architecture/report style for leadership reports, enterprise solution pages, PPT-ready architecture diagrams, and formal delivery documents.
 
 Delivery modes:
@@ -73,6 +75,7 @@ Recommended default:
 - Start with `mermaid` only to confirm logic when the flow is unclear.
 - Move to `editable` when the user may correct layout, arrows, or wording manually.
 - Move to `static` after the editable version is accepted.
+- Use `mono` when the user asks for black-and-white, wireframe, draw.io-like, engineering-document, README, or minimal technical style.
 - Use `formal` only when the user explicitly asks for formal report, architecture, consulting, enterprise, leadership, or PPT style.
 
 ## Visual Style Rules
@@ -105,6 +108,35 @@ Avoid in `sketch`:
 - Big black title bars.
 - Number badges everywhere.
 - Formal architecture-page composition.
+
+### `mono`
+
+Use this style when the user asks for black-and-white, wireframe, draw.io-like, README, engineering document, or minimal technical style.
+
+Purpose:
+
+- Present process logic with minimal visual decoration.
+- Make the diagram feel like a clean engineering diagram rather than a hand-drawn whiteboard or formal presentation slide.
+- Keep the result easy to inspect, edit, export, and paste into technical docs.
+
+Visual requirements:
+
+- Use a plain browser/page background. Do not add a grid background by default.
+- Use black, white, and neutral gray only unless the user explicitly asks for accent colors.
+- Use rectangular nodes with a single black border, small radius, and no decorative shadows.
+- Use simple black arrows with small solid arrowheads.
+- Use dashed gray arrows only for feedback, async, or secondary flows.
+- Keep typography utilitarian and readable; prefer system sans-serif or neutral document fonts.
+- Keep node content concise and avoid single-character Chinese wrapping.
+- Keep editable diagrams fully functional: draggable nodes, editable text, auto-rerendered arrows, save/reset/export JSON/export PNG controls.
+- The chart should initialize centered with real canvas whitespace around it for manual adjustment.
+
+Avoid in `mono`:
+
+- Grid backgrounds unless explicitly requested.
+- Hand-drawn fonts, playful icons, colorful category borders, or comic styling.
+- Heavy title bars, large decorative labels, gradients, glass effects, or presentation-like background treatments.
+- Static-only HTML when the user expects the flowchart-maker editable workflow.
 
 ### `formal`
 
@@ -168,6 +200,7 @@ For HTML flowcharts:
 - The whitespace around an editable diagram must be inside the draggable canvas/workspace, not just empty browser margin created by scaling the whole canvas down.
 - Editable diagrams should initialize with the chart group centered both horizontally and vertically within the editable canvas.
 - Use a single visible border per node by default; do not add inner pale duplicate borders unless explicitly requested.
+- For `mono` diagrams, do not use a grid background by default. Use a plain page background with black, white, and neutral gray linework.
 
 ## Editable HTML Template Rules
 
@@ -191,6 +224,17 @@ When adapting the template, update the `edges` array and initial `left/top/width
 - arrowheads point to the expected node boundary
 - the user can drag nodes into the surrounding whitespace
 
+Use `assets/mono-editable-flowchart-template.html` for `mono` + `editable` diagrams. Preserve these behaviors:
+
+- Every node is draggable inside one large workspace.
+- Node text, edge labels, and group titles are `contenteditable` where applicable.
+- Arrows rerender automatically after dragging or text edits.
+- The toolbar includes save, reset, export JSON, and export PNG.
+- Visual styling remains black-and-white/gray, with a plain page background and no grid by default.
+- Nodes use a single black border, compact radius, and no decorative shadows.
+- Arrows use small solid black arrowheads; secondary feedback lines may be dashed gray.
+- Initial layout should keep the chart centered and leave real draggable whitespace around the chart.
+
 ## Layout QA
 
 When possible, open the HTML in a browser and inspect at desktop and mobile widths. For important deliverables, use a browser automation or screenshot workflow to confirm:
@@ -213,4 +257,5 @@ If no rendered preview is possible, run the static checker in `scripts/check_flo
 
 - `assets/flowchart-template.html`: starting point for an HTML/CSS flowchart.
 - `assets/editable-flowchart-template.html`: stable `sketch` + `editable` HTML flowchart template with draggable nodes, editable text, shape-aware arrows, internal workspace whitespace, save/reset/export PNG/export JSON controls, and small solid arrowheads.
+- `assets/mono-editable-flowchart-template.html`: stable `mono` + `editable` HTML flowchart template with draggable nodes, editable text, plain background, black/gray wireframe styling, save/reset/export PNG/export JSON controls, and small solid arrowheads.
 - `scripts/check_flowchart_html.py`: lightweight static checker for common HTML output omissions.

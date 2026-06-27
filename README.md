@@ -44,6 +44,36 @@ Avoid:
 - Big black title bars.
 - Formal architecture-page composition.
 
+### `mono`
+
+Use for minimal technical diagrams.
+
+![Mono style example](docs/images/mono-example.png)
+
+Use for:
+
+- Technical documentation.
+- README diagrams.
+- Engineering explanations.
+- Draw.io-like neutral diagrams.
+- Black-and-white process diagrams.
+
+Visual character:
+
+- Plain page background.
+- Black-and-white wireframe style.
+- Single-border rectangular nodes.
+- Small solid black arrowheads.
+- Dashed gray lines for feedback or secondary flows.
+- Editable HTML workflow with save, reset, JSON export, and PNG export.
+
+Avoid:
+
+- Grid backgrounds unless explicitly requested.
+- Decorative colors.
+- Hand-drawn fonts or comic-style elements.
+- Static-only HTML when manual editing is expected.
+
 ### `formal`
 
 Use for official or enterprise-facing materials.
@@ -105,6 +135,8 @@ Capabilities:
 
 For `sketch + editable`, the skill starts from `assets/editable-flowchart-template.html`.
 
+For `mono + editable`, the skill starts from `assets/mono-editable-flowchart-template.html`.
+
 ### `static`
 
 Best for final delivery after layout is accepted.
@@ -131,6 +163,8 @@ Best for:
 |---|---|
 | `sketch + editable` | Concept diagrams, teaching diagrams, knowledge cards that may need manual adjustment |
 | `sketch + static` | Final whiteboard-style image for sharing or publishing |
+| `mono + editable` | Technical docs, README diagrams, engineering process diagrams that need manual adjustment |
+| `mono + static` | Final black-and-white wireframe image for docs or architecture notes |
 | `formal + editable` | Architecture draft that needs manual adjustment before delivery |
 | `formal + static` | Final leadership-report or PPT-ready architecture diagram |
 | `formal + interactive` | Product demo or training walkthrough with formal visual language |
@@ -161,6 +195,12 @@ flowchart-maker/
   assets/
     flowchart-template.html
     editable-flowchart-template.html
+    mono-editable-flowchart-template.html
+  docs/
+    images/
+      sketch-example.png
+      mono-example.png
+      formal-example.png
   scripts/
     check_flowchart_html.py
 ```
