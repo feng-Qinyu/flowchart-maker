@@ -1,6 +1,6 @@
 # Flowchart Maker
 
-Flowchart Maker 是一个用于生成、修改、验证和导出流程图的 Codex skill。它适合处理流程图、工作流图、系统流程、Mermaid 图、HTML 流程图、SVG 风格图、PPT 配图和白板风格图。
+Flowchart Maker 是一个用于生成、修改、验证和导出流程图的 skill。它适合处理流程图、工作流图、系统流程、Mermaid 图、HTML 流程图、SVG 风格图、PPT 配图和白板风格图。
 
 它采用两层工作方式：
 
