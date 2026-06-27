@@ -20,6 +20,8 @@ It uses a two-layer workflow:
 
 Default style.
 
+![Sketch style example](docs/images/sketch-example.png)
+
 Use for:
 
 - Concept explanation.
@@ -45,6 +47,8 @@ Avoid:
 ### `formal`
 
 Use for official or enterprise-facing materials.
+
+![Formal style example](docs/images/formal-example.png)
 
 Use for:
 
