@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flowchart</title>
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --surface: #fffefa;
+      --ink: #17202a;
+      --muted: #66717d;
+      --line: #d5ccbd;
+      --accent: #2f66d0;
+      --accent-soft: #eef4ff;
+      --shadow: 0 14px 36px rgba(30, 33, 38, .12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .summary {
+      max-width: 820px;
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .chart-shell {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .chart {
+      min-width: 920px;
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+    }
+
+    .node {
+      min-width: 260px;
+      max-width: 360px;
+      min-height: 58px;
+      padding: 12px 16px;
+      border: 1.5px solid #9aa8bb;
+      border-radius: 8px;
+      background: #fff;
+      text-align: center;
+      overflow-wrap: anywhere;
+      box-shadow: 0 8px 18px rgba(26, 36, 50, .08);
+    }
+
+    .node strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .arrow {
+      width: 2px;
+      height: 22px;
+      background: #8491a3;
+      position: relative;
+    }
+
+    .arrow::after {
+      content: "";
+      position: absolute;
+      left: -5px;
+      bottom: -1px;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 8px solid #8491a3;
+    }
+
+    .group {
+      width: min(760px, 100%);
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      background: var(--accent-soft);
+      padding: 14px;
+    }
+
+    .group-title {
+      text-align: center;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .group-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .subnode {
+      min-width: 0;
+      min-height: 70px;
+      padding: 10px;
+      border: 1px solid #b8c8ed;
+      border-radius: 7px;
+      background: #fff;
+      text-align: center;
+      overflow-wrap: anywhere;
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      main { padding: 18px 12px 28px; }
+      h1 { font-size: 23px; }
+      .chart-shell { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>流程图标题</h1>
+    <p class="summary">一句话说明这张图表达的主流程和关键闭环。</p>
+
+    <section class="chart-shell" aria-label="流程图">
+      <div class="chart">
+        <div class="node"><strong>节点 A</strong>说明文字</div>
+        <div class="arrow"></div>
+        <div class="node"><strong>节点 B</strong>说明文字</div>
+        <div class="arrow"></div>
+        <div class="group">
+          <div class="group-title">分组容器</div>
+          <div class="group-grid">
+            <div class="subnode"><strong>子节点 1</strong><br>说明</div>
+            <div class="subnode"><strong>子节点 2</strong><br>说明</div>
+            <div class="subnode"><strong>子节点 3</strong><br>说明</div>
+            <div class="subnode"><strong>子节点 4</strong><br>说明</div>
+          </div>
+        </div>
+        <div class="arrow"></div>
+        <div class="node"><strong>节点 C</strong>说明文字</div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+

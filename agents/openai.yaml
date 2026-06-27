@@ -1,0 +1,4 @@
+interface:
+  display_name: "流程图生成器"
+  short_description: "Create editable, polished, validated flowcharts"
+  default_prompt: "Use $flowchart-maker to create a polished flowchart from this process."
