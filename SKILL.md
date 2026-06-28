@@ -23,10 +23,10 @@ Use this skill when the user wants a flowchart that can be corrected, reflowed, 
 2. Create or update the Mermaid source first.
 3. If the logic is ambiguous, ask the user to verify the Mermaid-level flow before visual polishing.
 4. Convert the accepted flow into an HTML presentation version when the user needs better layout or visual quality.
-5. For `sketch` + `editable` HTML flowcharts, start from `assets/editable-flowchart-template.html` unless the user asks for a different implementation. Replace the nodes, initial positions, labels, and edge list while preserving the template's editing, dragging, shape-aware ports, solid arrowheads, save/reset/export PNG/export JSON controls, and internal workspace whitespace.
-6. For `mono` + `editable` HTML flowcharts, start from `assets/mono-editable-flowchart-template.html`. Preserve editability, dragging, auto-rerendered arrows, save/reset/export JSON/export PNG controls, plain browser background, black/gray linework, and no grid background.
-7. For `glass` + `editable` HTML flowcharts, start from `assets/glass-editable-flowchart-template.html`. Preserve editability, dragging, auto-rerendered arrows, save/reset/export JSON/export PNG controls, dark atmospheric background, translucent panels, subtle glow, and readable light text.
-8. For `blueprint`, `neon`, `editorial`, `pastel`, `brutal`, or `dark` + `editable` HTML flowcharts, use the stable editable interaction skeleton from the existing templates, then apply the requested visual theme. Preserve dragging, editable text, shape-aware ports, auto-rerendered arrows, save/reset/export JSON/export PNG controls, centered initial layout, and real workspace whitespace.
+5. For `editable` HTML flowcharts, start from the dedicated bundled template for the requested visual style. Replace the nodes, initial positions, labels, and edge list while preserving the template's editing, dragging, shape-aware ports, solid arrowheads, save/reset/export PNG/export JSON controls, centered initial layout, and internal workspace whitespace.
+6. Use `assets/sketch-editable-flowchart-template.html` for `sketch`; `assets/editable-flowchart-template.html` remains a compatibility alias for the same style.
+7. Use `assets/<style>-editable-flowchart-template.html` for the other bundled styles: `mono`, `glass`, `formal`, `blueprint`, `neon`, `editorial`, `pastel`, `brutal`, and `dark`.
+8. Preserve the selected template's visual language. Do not flatten every theme back into the generic skeleton unless the user explicitly asks for a custom implementation.
 9. When the user asks for multiple themes, create one standalone HTML file per theme. Do not put all themes into one combined gallery page unless the user explicitly asks for a comparison page.
 10. Before completion, check layout quality:
    - no overlapping nodes
@@ -394,7 +394,7 @@ For HTML flowcharts:
 
 ## Editable HTML Template Rules
 
-Use `assets/editable-flowchart-template.html` for `sketch` + `editable` diagrams. Preserve these behaviors:
+Use `assets/sketch-editable-flowchart-template.html` for `sketch` + `editable` diagrams. `assets/editable-flowchart-template.html` is kept as a compatibility alias for older instructions. Preserve these behaviors:
 
 - Every node is draggable inside one large workspace.
 - Node text and edge labels are `contenteditable`.
@@ -436,7 +436,22 @@ Use `assets/glass-editable-flowchart-template.html` for `glass` + `editable` dia
 - Arrows use small solid light arrowheads; secondary feedback lines may be dashed mint/cyan.
 - Initial layout should keep the chart centered and leave real draggable whitespace around the chart.
 
-For `blueprint`, `neon`, `editorial`, `pastel`, `brutal`, and `dark` + `editable` diagrams, preserve these behaviors even when no dedicated asset template exists:
+Use the dedicated editable template for every supported visual style:
+
+| Style | Template |
+|---|---|
+| `sketch` | `assets/sketch-editable-flowchart-template.html` |
+| `mono` | `assets/mono-editable-flowchart-template.html` |
+| `glass` | `assets/glass-editable-flowchart-template.html` |
+| `formal` | `assets/formal-editable-flowchart-template.html` |
+| `blueprint` | `assets/blueprint-editable-flowchart-template.html` |
+| `neon` | `assets/neon-editable-flowchart-template.html` |
+| `editorial` | `assets/editorial-editable-flowchart-template.html` |
+| `pastel` | `assets/pastel-editable-flowchart-template.html` |
+| `brutal` | `assets/brutal-editable-flowchart-template.html` |
+| `dark` | `assets/dark-editable-flowchart-template.html` |
+
+For `formal`, `blueprint`, `neon`, `editorial`, `pastel`, `brutal`, and `dark` + `editable` diagrams, preserve these behaviors from their dedicated templates:
 
 - Every node is draggable inside one large workspace.
 - Node text and edge labels are `contenteditable` where applicable.
@@ -467,9 +482,16 @@ If no rendered preview is possible, run the static checker in `scripts/check_flo
 
 ## Bundled Resources
 
-- `assets/flowchart-template.html`: starting point for an HTML/CSS flowchart.
-- `assets/editable-flowchart-template.html`: stable `sketch` + `editable` HTML flowchart template with draggable nodes, editable text, shape-aware arrows, internal workspace whitespace, save/reset/export PNG/export JSON controls, and small solid arrowheads.
-- `assets/mono-editable-flowchart-template.html`: stable `mono` + `editable` HTML flowchart template with draggable nodes, editable text, plain background, black/gray wireframe styling, save/reset/export PNG/export JSON controls, and small solid arrowheads.
-- `assets/glass-editable-flowchart-template.html`: stable `glass` + `editable` HTML flowchart template with draggable nodes, editable text, dark atmospheric background, translucent panels, light arrows, save/reset/export PNG/export JSON controls, and small solid arrowheads.
-- `blueprint`, `neon`, `editorial`, `pastel`, `brutal`, and `dark` do not yet have dedicated bundled templates. Build them by reusing the stable editable interaction skeleton and applying the style rules above.
+- `assets/flowchart-template.html`: starting point for a static HTML/CSS flowchart.
+- `assets/editable-flowchart-template.html`: compatibility alias for the `sketch` editable template.
+- `assets/sketch-editable-flowchart-template.html`: stable `sketch` + `editable` HTML flowchart template with draggable nodes, editable text, shape-aware arrows, internal workspace whitespace, save/reset/export PNG/export JSON controls, and small solid arrowheads.
+- `assets/mono-editable-flowchart-template.html`: stable `mono` + `editable` HTML flowchart template with plain background, black/gray wireframe styling, save/reset/export PNG/export JSON controls, and small solid arrowheads.
+- `assets/glass-editable-flowchart-template.html`: stable `glass` + `editable` HTML flowchart template with dark atmospheric background, translucent panels, light arrows, save/reset/export PNG/export JSON controls, and small solid arrowheads.
+- `assets/formal-editable-flowchart-template.html`: stable `formal` + `editable` HTML flowchart template for professional architecture/report diagrams.
+- `assets/blueprint-editable-flowchart-template.html`: stable `blueprint` + `editable` HTML flowchart template for engineering-blueprint diagrams.
+- `assets/neon-editable-flowchart-template.html`: stable `neon` + `editable` HTML flowchart template for cyber, AI, MCP, and automation diagrams.
+- `assets/editorial-editable-flowchart-template.html`: stable `editorial` + `editable` HTML flowchart template for magazine-like explanatory diagrams.
+- `assets/pastel-editable-flowchart-template.html`: stable `pastel` + `editable` HTML flowchart template for soft, approachable flowcharts.
+- `assets/brutal-editable-flowchart-template.html`: stable `brutal` + `editable` HTML flowchart template for high-impact, high-contrast diagrams.
+- `assets/dark-editable-flowchart-template.html`: stable `dark` + `editable` HTML flowchart template for restrained dark professional diagrams.
 - `scripts/check_flowchart_html.py`: lightweight static checker for common HTML output omissions.

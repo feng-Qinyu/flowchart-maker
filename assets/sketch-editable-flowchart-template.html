@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editable Agent Runtime Flowchart</title>
+  <style>
+    :root {
+      --paper: #fffdf8;
+      --ink: #151515;
+      --purple: #8f5bb7;
+      --blue: #1687d9;
+      --green: #27984d;
+      --amber: #e39a16;
+      --orange: #e66a25;
+      --teal: #2b9f88;
+      --red: #d64032;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Comic Sans MS", "Marker Felt", "Bradley Hand", "Segoe UI", sans-serif;
+      word-break: keep-all;
+      user-select: none;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+    }
+
+    .canvas {
+      position: relative;
+      width: 1920px;
+      height: 1056px;
+      transform-origin: center;
+    }
+
+    svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .node {
+      position: absolute;
+      min-height: 74px;
+      padding: 18px 20px 14px;
+      color: var(--accent);
+      background: rgba(255,255,255,.9);
+      border: 3px solid currentColor;
+      border-radius: 12px 16px 10px 14px;
+      box-shadow: 7px 8px 0 rgba(0,0,0,.08);
+      cursor: grab;
+      z-index: 2;
+    }
+
+    .node::after { display: none; }
+
+    .node.dragging {
+      cursor: grabbing;
+      opacity: .92;
+      z-index: 4;
+    }
+
+    .node h2 {
+      margin: 0 0 10px;
+      color: #111;
+      font-size: 27px;
+      line-height: 1;
+      letter-spacing: 0;
+      white-space: nowrap;
+      text-decoration: underline;
+      text-decoration-thickness: 3px;
+      text-underline-offset: 6px;
+      text-decoration-color: currentColor;
+    }
+
+    .node p,
+    .node li {
+      margin: 0;
+      color: #242424;
+      font-size: 17px;
+      line-height: 1.45;
+      white-space: nowrap;
+    }
+
+    .node ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .node [contenteditable="true"] {
+      user-select: text;
+      cursor: text;
+      outline: none;
+      border-radius: 4px;
+    }
+
+    .node [contenteditable="true"]:focus {
+      background: rgba(255, 231, 128, .28);
+      box-shadow: 0 0 0 3px rgba(47, 102, 208, .16);
+    }
+
+    .icon {
+      position: absolute;
+      left: -29px;
+      top: -29px;
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      border: 3px solid currentColor;
+      border-radius: 50%;
+      background: var(--paper);
+      color: currentColor;
+      font-size: 28px;
+      font-weight: 800;
+      pointer-events: none;
+    }
+
+    .diamond {
+      width: 148px;
+      height: 148px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      display: grid;
+      place-items: center;
+      box-shadow: none;
+    }
+
+    .diamond::after { display: none; }
+
+    .diamond h2 {
+      margin: 0;
+      width: 170px;
+      text-align: center;
+      white-space: normal;
+      line-height: 1.1;
+      text-decoration-color: currentColor;
+      z-index: 2;
+    }
+
+    .diamond-shape {
+      position: absolute;
+      inset: -4px;
+      width: calc(100% + 8px);
+      height: calc(100% + 8px);
+      pointer-events: none;
+      overflow: visible;
+      z-index: 1;
+    }
+
+    .wide {
+      text-align: center;
+      background: rgba(236,250,245,.9);
+    }
+
+    .wide h2 { text-align: center; }
+    .wide p { white-space: normal; }
+
+    .note {
+      border-style: dashed;
+      box-shadow: none;
+      background: rgba(255,255,255,.75);
+    }
+
+    .note h2 {
+      display: inline;
+      margin: 0;
+      font-size: 17px;
+      text-decoration: none;
+    }
+
+    .note p {
+      display: inline;
+      color: var(--blue);
+      white-space: normal;
+    }
+
+    .cylinder {
+      width: 150px;
+      height: 138px;
+      padding: 42px 12px 0;
+      background: rgba(236,250,245,.9);
+      border-radius: 50% / 18%;
+      text-align: center;
+    }
+
+    .cylinder h2 { font-size: 25px; }
+    .cylinder p { font-weight: 700; }
+
+    .list {
+      border-style: dashed;
+      box-shadow: none;
+      background: rgba(255,255,255,.74);
+      padding: 12px 16px;
+    }
+
+    .list ul { padding-left: 18px; }
+    .list li { font-size: 15px; line-height: 1.35; }
+
+    .edge {
+      fill: none;
+      stroke: #111;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .edge.dashed {
+      stroke-dasharray: 4 10;
+      stroke-width: 2.6;
+    }
+
+    .edge.teal {
+      stroke: var(--teal);
+      stroke-dasharray: 3 9;
+      stroke-width: 2.6;
+    }
+
+    .edge-label {
+      position: absolute;
+      z-index: 3;
+      min-width: 24px;
+      color: var(--label);
+      font-size: 23px;
+      font-weight: 800;
+      line-height: 1;
+      text-align: center;
+      cursor: text;
+      user-select: text;
+    }
+
+    .edge-label:focus {
+      outline: none;
+      background: rgba(255, 231, 128, .28);
+      box-shadow: 0 0 0 3px rgba(47, 102, 208, .16);
+    }
+
+    .toolbar {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .toolbar button {
+      border: 1px solid rgba(0,0,0,.18);
+      border-radius: 8px;
+      background: rgba(255,255,255,.88);
+      color: #111;
+      padding: 7px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas" id="canvas">
+    <svg id="edges" viewBox="0 0 1920 1056" aria-hidden="true">
+      <defs>
+        <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+          <path d="M1,1 L8,4.5 L1,8 Z" fill="#111" stroke="none" />
+        </marker>
+        <marker id="arrowTeal" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+          <path d="M1,1 L8,4.5 L1,8 Z" fill="#2b9f88" stroke="none" />
+        </marker>
+      </defs>
+    </svg>
+
+    <article class="node" id="goal" style="--accent:var(--purple); left:260px; top:380px; width:170px;">
+      <div class="icon">◎</div>
+      <h2 contenteditable="true">目标</h2>
+      <p contenteditable="true">由用户设定</p>
+    </article>
+
+    <article class="node" id="context" style="--accent:var(--blue); left:530px; top:370px; width:250px;">
+      <div class="icon">⌕</div>
+      <h2 contenteditable="true">Context</h2>
+      <ul>
+        <li contenteditable="true">任务与历史</li>
+        <li contenteditable="true">工具清单</li>
+        <li contenteditable="true">约束与权限</li>
+      </ul>
+    </article>
+
+    <article class="node" id="model" style="--accent:var(--green); left:800px; top:180px; width:230px;">
+      <div class="icon">✓</div>
+      <h2 contenteditable="true">模型决策</h2>
+      <ul>
+        <li contenteditable="true">更新 Plan</li>
+        <li contenteditable="true">选择下一步</li>
+        <li contenteditable="true">判断是否完成</li>
+      </ul>
+    </article>
+
+    <article class="node" id="runtime" style="--accent:var(--amber); left:1120px; top:180px; width:246px;">
+      <div class="icon">⚙</div>
+      <h2 contenteditable="true">Runtime 执行</h2>
+      <ul>
+        <li contenteditable="true">翻译 Tool Call</li>
+        <li contenteditable="true">权限 / 预算 / 日志</li>
+        <li contenteditable="true">失败重试</li>
+      </ul>
+    </article>
+
+    <article class="node diamond" id="decision" style="--accent:var(--orange); left:1460px; top:260px;">
+      <svg class="diamond-shape" viewBox="-4 -4 156 156" aria-hidden="true">
+        <polygon points="74,0 148,74 74,148 0,74" fill="rgba(255,255,255,.9)" stroke="var(--orange)" stroke-width="3" />
+      </svg>
+      <h2 contenteditable="true">需要工具？</h2>
+    </article>
+
+    <article class="node" id="tool" style="--accent:var(--purple); left:1470px; top:520px; width:180px;">
+      <div class="icon">↗</div>
+      <h2 contenteditable="true">工具 / MCP</h2>
+      <p contenteditable="true">文件、浏览器</p>
+      <p contenteditable="true">数据库、API</p>
+      <p contenteditable="true">测试系统</p>
+    </article>
+
+    <article class="node" id="observation" style="--accent:var(--teal); left:1080px; top:495px; width:280px;">
+      <div class="icon">↺</div>
+      <h2 contenteditable="true">Observation</h2>
+      <p contenteditable="true">结果、状态变化、失败原因</p>
+      <p contenteditable="true">回填 Context</p>
+    </article>
+
+    <aside class="node note" id="value" style="--accent:var(--blue); left:260px; top:730px; width:300px;">
+      <h2 contenteditable="true">沉淀价值：</h2>
+      <p contenteditable="true">轨迹可汇聚、能力可评价、经验可复用</p>
+    </aside>
+
+    <section class="node wide" id="platform" style="--accent:var(--teal); left:660px; top:710px; width:420px;">
+      <h2 contenteditable="true">高质量数据集平台</h2>
+      <p contenteditable="true">统一采集协议、schema、清洗脱敏、标签、评价</p>
+      <p contenteditable="true">版本、样本集、评测集、训练集</p>
+    </section>
+
+    <section class="node cylinder" id="trace" style="--accent:var(--teal); left:1220px; top:705px;">
+      <h2 contenteditable="true">轨迹数据</h2>
+      <p contenteditable="true">对话之外</p>
+    </section>
+
+    <aside class="node list" id="traceList" style="--accent:var(--green); left:1440px; top:740px; width:170px;">
+      <ul>
+        <li contenteditable="true">agent_run</li>
+        <li contenteditable="true">agent_turn</li>
+        <li contenteditable="true">agent_action</li>
+        <li contenteditable="true">observation</li>
+        <li contenteditable="true">artifact</li>
+        <li contenteditable="true">feedback / eval</li>
+      </ul>
+    </aside>
+
+    <div class="edge-label" id="label-yes" contenteditable="true" style="--label:var(--green); left:1588px; top:350px;">是</div>
+    <div class="edge-label" id="label-no" contenteditable="true" style="--label:var(--red); left:950px; top:470px;">否</div>
+  </div>
+
+  <div class="toolbar">
+    <button id="saveBtn">保存</button>
+    <button id="resetBtn">重置</button>
+    <button id="exportBtn">导出 JSON</button>
+    <button id="exportPngBtn">导出 PNG</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const svg = document.getElementById("edges");
+    const STORAGE_KEY = "agent-runtime-context-editable-v4";
+    localStorage.removeItem("agent-runtime-context-editable-v1");
+    localStorage.removeItem("agent-runtime-context-editable-v2");
+    localStorage.removeItem("agent-runtime-context-editable-v3");
+    const edges = [
+      ["goal", "context", "normal"],
+      ["context", "model", "normal"],
+      ["model", "runtime", "normal"],
+      ["runtime", "decision", "normal"],
+      ["decision", "tool", "normal"],
+      ["decision", "context", "feedback"],
+      ["tool", "observation", "normal"],
+      ["observation", "runtime", "dashed"],
+      ["trace", "context", "memory"],
+      ["value", "platform", "teal"],
+      ["platform", "trace", "teal"],
+      ["trace", "traceList", "teal"]
+    ];
+
+    function scaleCanvas() {
+      const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1056);
+      canvas.style.transform = `scale(${scale})`;
+    }
+
+    function rect(id) {
+      const el = document.getElementById(id);
+      return {
+        el,
+        x: parseFloat(el.style.left),
+        y: parseFloat(el.style.top),
+        w: el.offsetWidth,
+        h: el.offsetHeight
+      };
+    }
+
+    function port(r, side) {
+      if (r.el.classList.contains("diamond")) {
+        if (side === "left") return [r.x, r.y + r.h / 2];
+        if (side === "right") return [r.x + r.w, r.y + r.h / 2];
+        if (side === "top") return [r.x + r.w / 2, r.y];
+        return [r.x + r.w / 2, r.y + r.h];
+      }
+      if (side === "left") return [r.x, r.y + r.h / 2];
+      if (side === "right") return [r.x + r.w, r.y + r.h / 2];
+      if (side === "top") return [r.x + r.w / 2, r.y];
+      return [r.x + r.w / 2, r.y + r.h];
+    }
+
+    function outsidePort(r, side, gap = 2) {
+      const [x, y] = port(r, side);
+      if (side === "left") return [x - gap, y];
+      if (side === "right") return [x + gap, y];
+      if (side === "top") return [x, y - gap];
+      return [x, y + gap];
+    }
+
+    function sides(a, b) {
+      const dx = b.x + b.w / 2 - (a.x + a.w / 2);
+      const dy = b.y + b.h / 2 - (a.y + a.h / 2);
+      if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? ["right", "left"] : ["left", "right"];
+      return dy > 0 ? ["bottom", "top"] : ["top", "bottom"];
+    }
+
+    function pathBetween(a, b, kind) {
+      if (kind === "feedback") {
+        const s = outsidePort(a, "left");
+        const t = outsidePort(b, "right");
+        return `M${s[0]},${s[1] + 8} C${s[0] - 90},${s[1] + 92} ${t[0] + 180},${t[1] + 92} ${t[0]},${t[1] + 32}`;
+      }
+      if (kind === "memory") {
+        const s = outsidePort(a, "left");
+        const t = outsidePort(b, "bottom");
+        return `M${s[0]},${s[1]} C${s[0] - 190},${s[1] - 4} ${t[0] + 84},${t[1] + 62} ${t[0]},${t[1]}`;
+      }
+      const [from, to] = sides(a, b);
+      const s = outsidePort(a, from);
+      const t = outsidePort(b, to);
+      if (from === "right" || from === "left") {
+        const mx = (s[0] + t[0]) / 2;
+        return `M${s[0]},${s[1]} C${mx},${s[1]} ${mx},${t[1]} ${t[0]},${t[1]}`;
+      }
+      const my = (s[1] + t[1]) / 2;
+      const bend = Math.abs(s[0] - t[0]) < 80 ? 0 : (t[0] - s[0]) * 0.18;
+      return `M${s[0]},${s[1]} C${s[0] + bend},${my} ${t[0] - bend},${my} ${t[0]},${t[1]}`;
+    }
+
+    function renderEdges() {
+      [...svg.querySelectorAll("path.edge")].forEach(p => p.remove());
+      for (const [from, to, kind] of edges) {
+        const a = rect(from);
+        const b = rect(to);
+        const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        p.setAttribute("class", `edge ${kind === "dashed" || kind === "memory" ? "dashed" : ""} ${kind === "teal" ? "teal" : ""}`);
+        p.setAttribute("d", pathBetween(a, b, kind));
+        p.setAttribute("marker-end", kind === "teal" ? "url(#arrowTeal)" : "url(#arrow)");
+        svg.appendChild(p);
+      }
+    }
+
+    function makeDraggable(node) {
+      let start = null;
+      node.addEventListener("pointerdown", (event) => {
+        if (event.target.closest("[contenteditable='true']")) return;
+        const scale = canvas.getBoundingClientRect().width / 1920;
+        start = {
+          x: event.clientX,
+          y: event.clientY,
+          left: parseFloat(node.style.left),
+          top: parseFloat(node.style.top),
+          scale
+        };
+        node.classList.add("dragging");
+        node.setPointerCapture(event.pointerId);
+      });
+      node.addEventListener("pointermove", (event) => {
+        if (!start) return;
+        const left = start.left + (event.clientX - start.x) / start.scale;
+        const top = start.top + (event.clientY - start.y) / start.scale;
+        node.style.left = `${Math.max(0, Math.min(1900 - node.offsetWidth, left))}px`;
+        node.style.top = `${Math.max(0, Math.min(1040 - node.offsetHeight, top))}px`;
+        renderEdges();
+      });
+      node.addEventListener("pointerup", () => {
+        start = null;
+        node.classList.remove("dragging");
+      });
+    }
+
+    function collectState() {
+      return {
+        nodes: [...document.querySelectorAll(".node")].map(node => ({
+          id: node.id,
+          left: node.style.left,
+          top: node.style.top,
+          html: node.innerHTML
+        })),
+        labels: [...document.querySelectorAll(".edge-label")].map(label => ({
+          id: label.id,
+          left: label.style.left,
+          top: label.style.top,
+          text: label.textContent
+        }))
+      };
+    }
+
+    function applyState(state) {
+      if (!state) return;
+      for (const item of state.nodes || []) {
+        const node = document.getElementById(item.id);
+        if (!node) continue;
+        node.style.left = item.left;
+        node.style.top = item.top;
+        if (node.id !== "decision") node.innerHTML = item.html;
+      }
+      for (const item of state.labels || []) {
+        const label = document.getElementById(item.id);
+        if (!label) continue;
+        label.style.left = item.left;
+        label.style.top = item.top;
+        label.textContent = item.text;
+      }
+      ensureDecisionShape();
+    }
+
+    function ensureDecisionShape() {
+      const decision = document.getElementById("decision");
+      if (!decision || decision.querySelector(".diamond-shape")) return;
+      decision.insertAdjacentHTML("afterbegin", `
+        <svg class="diamond-shape" viewBox="-4 -4 156 156" aria-hidden="true">
+          <polygon points="74,0 148,74 74,148 0,74" fill="rgba(255,255,255,.9)" stroke="var(--orange)" stroke-width="3"></polygon>
+        </svg>
+      `);
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
+    }
+
+    function inlineStyles(source, clone) {
+      const sourceEls = [source, ...source.querySelectorAll("*")];
+      const cloneEls = [clone, ...clone.querySelectorAll("*")];
+      sourceEls.forEach((sourceEl, index) => {
+        const cloneEl = cloneEls[index];
+        if (!cloneEl || !(sourceEl instanceof Element)) return;
+        const computed = getComputedStyle(sourceEl);
+        cloneEl.setAttribute("style", Array.from(computed).map(name => `${name}:${computed.getPropertyValue(name)}`).join(";"));
+      });
+    }
+
+    async function exportPng() {
+      save();
+      renderEdges();
+
+      const clone = canvas.cloneNode(true);
+      clone.querySelectorAll(".toolbar").forEach(el => el.remove());
+      clone.style.transform = "none";
+      clone.style.position = "relative";
+      clone.style.left = "0";
+      clone.style.top = "0";
+      inlineStyles(canvas, clone);
+
+      const foreign = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1056" viewBox="0 0 1920 1056">
+          <foreignObject width="1920" height="1056">
+            <div xmlns="http://www.w3.org/1999/xhtml">${clone.outerHTML}</div>
+          </foreignObject>
+        </svg>`;
+
+      const svgBlob = new Blob([foreign], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = url;
+      });
+
+      const canvasEl = document.createElement("canvas");
+      canvasEl.width = 1920;
+      canvasEl.height = 1056;
+      const ctx = canvasEl.getContext("2d");
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--paper").trim() || "#fffdf8";
+      ctx.fillRect(0, 0, canvasEl.width, canvasEl.height);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+
+      const pngUrl = canvasEl.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = pngUrl;
+      a.download = "flowchart.png";
+      a.click();
+    }
+
+    document.querySelectorAll(".node").forEach(makeDraggable);
+    document.querySelectorAll("[contenteditable='true']").forEach(el => {
+      el.addEventListener("input", renderEdges);
+      el.addEventListener("blur", save);
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", save);
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    });
+    document.getElementById("exportBtn").addEventListener("click", async () => {
+      const text = JSON.stringify(collectState(), null, 2);
+      await navigator.clipboard.writeText(text);
+      alert("已复制 JSON 到剪贴板");
+    });
+    document.getElementById("exportPngBtn").addEventListener("click", () => {
+      exportPng().catch(error => {
+        console.error(error);
+        alert("导出 PNG 失败，请先保存后刷新页面再试。");
+      });
+    });
+
+    applyState(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
+    ensureDecisionShape();
+    window.addEventListener("resize", scaleCanvas);
+    scaleCanvas();
+    renderEdges();
+  </script>
+</body>
+</html>

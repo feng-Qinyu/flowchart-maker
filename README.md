@@ -125,10 +125,9 @@ Flowchart Maker 是一个用于生成、修改、验证和导出流程图的 ski
 1. 先确认必要信息：用途、输出格式、风格要求。
 2. 流程逻辑不明确时，先写 Mermaid 版本确认结构。
 3. 需要更好排版或视觉质量时，再转成 HTML 版本。
-4. `sketch`、`mono`、`glass` 有独立可编辑模板。
-5. `blueprint`、`neon`、`editorial`、`pastel`、`brutal`、`dark` 复用稳定可编辑骨架，再套主题样式。
-6. 多主题输出时，每个主题单独生成一个 HTML，不默认合成一个总览页。
-7. 完成前检查：节点不重叠、文字不溢出、箭头不遮挡文字、反馈路径可见、菱形文字居中。
+4. 10 个主题都有独立可编辑模板，生成时优先从对应主题模板开始。
+5. 多主题输出时，每个主题单独生成一个 HTML，不默认合成一个总览页。
+6. 完成前检查：节点不重叠、文字不溢出、箭头不遮挡文字、反馈路径可见、菱形文字居中。
 
 ## 文件结构
 
@@ -141,8 +140,16 @@ flowchart-maker/
   assets/
     flowchart-template.html
     editable-flowchart-template.html
+    sketch-editable-flowchart-template.html
     mono-editable-flowchart-template.html
     glass-editable-flowchart-template.html
+    formal-editable-flowchart-template.html
+    blueprint-editable-flowchart-template.html
+    neon-editable-flowchart-template.html
+    editorial-editable-flowchart-template.html
+    pastel-editable-flowchart-template.html
+    brutal-editable-flowchart-template.html
+    dark-editable-flowchart-template.html
   docs/
     images/
       sketch.png
@@ -158,6 +165,23 @@ flowchart-maker/
   scripts/
     check_flowchart_html.py
 ```
+
+## 主题模板
+
+| 主题 | 模板文件 |
+|---|---|
+| `sketch` 手绘漫画白板风 | `assets/sketch-editable-flowchart-template.html` |
+| `mono` 黑白线框风 | `assets/mono-editable-flowchart-template.html` |
+| `glass` 半透明科技风 | `assets/glass-editable-flowchart-template.html` |
+| `formal` 正式架构汇报风 | `assets/formal-editable-flowchart-template.html` |
+| `blueprint` 工程蓝图风 | `assets/blueprint-editable-flowchart-template.html` |
+| `neon` 赛博霓虹风 | `assets/neon-editable-flowchart-template.html` |
+| `editorial` 杂志编辑风 | `assets/editorial-editable-flowchart-template.html` |
+| `pastel` 柔和彩色风 | `assets/pastel-editable-flowchart-template.html` |
+| `brutal` 粗黑高对比风 | `assets/brutal-editable-flowchart-template.html` |
+| `dark` 深色专业风 | `assets/dark-editable-flowchart-template.html` |
+
+`assets/editable-flowchart-template.html` 保留为 `sketch` 旧版调用兼容入口。
 
 ## 默认输出目录
 

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dark Flow</title>
+  <style>
+    :root {
+      --page: #202020;
+      --canvas-bg: #202020;
+      --ink: #f6f3ec;
+      --muted: #d2ccc3;
+      --node-bg: #2b2b2b;
+      --border: #595959;
+      --accent: #d4a574;
+      --accent-2: #8fb8ff;
+      --radius: 6px;
+      --shadow: 0 14px 30px rgba(0,0,0,.34);
+      --stroke: 3;
+      --dash: 8 8;
+      --font: "Avenir Next", "Helvetica Neue", "PingFang SC", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--page);
+      color: var(--ink);
+      font-family: var(--font);
+      word-break: keep-all;
+      user-select: none;
+    }
+
+    body { display: grid; place-items: center; }
+
+    .canvas {
+      position: relative;
+      width: 1920px;
+      height: 1056px;
+      transform-origin: center;
+      background: var(--canvas-bg);
+      overflow: hidden;
+      
+    }
+
+    svg#edges {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .node {
+      position: absolute;
+      min-height: 94px;
+      padding: 20px 22px;
+      color: var(--ink);
+      background: var(--node-bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      cursor: grab;
+      z-index: 2;
+    }
+
+    .node.dragging { cursor: grabbing; opacity: .94; z-index: 5; }
+
+    .node h2 {
+      margin: 0 0 10px;
+      color: var(--ink);
+      font-size: 28px;
+      line-height: 1.08;
+      font-weight: 900;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .node p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.45;
+      white-space: nowrap;
+    }
+
+    .node [contenteditable="true"] {
+      user-select: text;
+      cursor: text;
+      outline: none;
+      border-radius: 3px;
+    }
+
+    .node [contenteditable="true"]:focus,
+    .edge-label:focus {
+      background: rgba(255, 255, 255, .38);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, .16);
+    }
+
+    .diamond {
+      width: 172px;
+      height: 172px;
+      min-height: 172px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      display: grid;
+      place-items: center;
+    }
+
+    .diamond-shape {
+      position: absolute;
+      inset: 0;
+      width: 172px;
+      height: 172px;
+      overflow: visible;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .diamond-shape polygon {
+      fill: var(--node-bg);
+      stroke: var(--border);
+      stroke-width: 2.4;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .diamond h2,
+    .diamond p {
+      position: absolute;
+      z-index: 2;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 132px;
+      text-align: center;
+      white-space: normal;
+    }
+
+    .diamond h2 {
+      top: 54px;
+      margin: 0;
+    }
+
+    .diamond p {
+      top: 94px;
+      margin: 0;
+    }
+
+    .edge {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: var(--stroke);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .edge.dashed {
+      stroke: var(--accent-2);
+      stroke-width: calc(var(--stroke) - .3px);
+      stroke-dasharray: var(--dash);
+    }
+
+    .edge-label {
+      position: absolute;
+      z-index: 3;
+      min-width: 24px;
+      padding: 2px 8px;
+      color: var(--accent-2);
+      background: transparent;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      cursor: text;
+      user-select: text;
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .toolbar button {
+      border: 1px solid rgba(0, 0, 0, .18);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .9);
+      color: #151515;
+      padding: 7px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .08);
+    }
+
+    .node h2{color:#fff}.node.context,.node.observe{border-color:#8fb8ff}.node.runtime,.node.tool{border-color:#d4a574}.diamond-shape polygon{fill:#2b2b2b;stroke:#d4a574}.toolbar button{background:#2b2b2b;color:#f6f3ec;border-color:#595959}
+  </style>
+</head>
+<body>
+  <div class="canvas" id="canvas">
+    <svg id="edges" viewBox="0 0 1920 1056" aria-hidden="true">
+      <defs>
+        <marker id="arrow" markerWidth="7" markerHeight="7" refX="6.4" refY="3.5" orient="auto" markerUnits="strokeWidth"><path d="M.8,.8 L6.4,3.5 L.8,6.2 Z" fill="var(--accent)" stroke="none"></path></marker>
+        <marker id="arrowAlt" markerWidth="7" markerHeight="7" refX="6.4" refY="3.5" orient="auto" markerUnits="strokeWidth"><path d="M.8,.8 L6.4,3.5 L.8,6.2 Z" fill="var(--accent-2)" stroke="none"></path></marker>
+      </defs>
+    </svg>
+
+    <article class="node input" id="input" style="left:375px; top:400px; width:230px;"><h2 contenteditable="true">用户输入</h2><p contenteditable="true">任务与目标</p></article>
+    <article class="node context" id="context" style="left:695px; top:400px; width:260px;"><h2 contenteditable="true">Context</h2><p contenteditable="true">历史、计划、约束</p></article>
+    <article class="node diamond decide" id="decision" style="left:1035px; top:362px;"><svg class="diamond-shape" viewBox="0 0 172 172" aria-hidden="true"><polygon points="86,4 168,86 86,168 4,86"></polygon></svg><h2 contenteditable="true">决策</h2><p contenteditable="true">下一步?</p></article>
+    <article class="node runtime" id="runtime" style="left:1315px; top:400px; width:230px;"><h2 contenteditable="true">Runtime</h2><p contenteditable="true">执行动作</p></article>
+    <article class="node tool" id="tool" style="left:1315px; top:600px; width:230px;"><h2 contenteditable="true">工具</h2><p contenteditable="true">文件 / API</p></article>
+    <article class="node observe" id="observation" style="left:695px; top:600px; width:260px;"><h2 contenteditable="true">Observation</h2><p contenteditable="true">结果回填</p></article>
+
+    <div class="edge-label" id="label-yes" contenteditable="true" style="left:1207px; top:435px;">是</div>
+    <div class="edge-label" id="label-loop" contenteditable="true" style="left:435px; top:618px;">反馈</div>
+  </div>
+
+  <div class="toolbar"><button id="saveBtn">保存</button><button id="resetBtn">重置</button><button id="exportBtn">导出 JSON</button><button id="exportPngBtn">导出 PNG</button></div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const svg = document.getElementById("edges");
+    const STORAGE_KEY = "simple-flow-dark-editable-v1";
+    const DOWNLOAD_NAME = "simple-flow-dark.png";
+    const edges = [
+      { from: "input", to: "context", kind: "normal" },
+      { from: "context", to: "decision", kind: "normal" },
+      { from: "decision", to: "runtime", kind: "normal", fromSide: "right", toSide: "left" },
+      { from: "runtime", to: "tool", kind: "normal", fromSide: "bottom", toSide: "top" },
+      { from: "tool", to: "observation", kind: "normal", fromSide: "left", toSide: "right" },
+      { from: "observation", to: "input", kind: "dashed", fromSide: "left", toSide: "bottom", curve: "loop" }
+    ];
+
+    function scaleCanvas() { const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1056); canvas.style.transform = `scale(${scale})`; }
+    function rect(id) { const el = document.getElementById(id); return { el, x: parseFloat(el.style.left), y: parseFloat(el.style.top), w: el.offsetWidth, h: el.offsetHeight, shape: el.classList.contains("diamond") ? "diamond" : "rect" }; }
+    function port(r, side) {
+      if (r.shape === "diamond") { if (side === "left") return [r.x + 4, r.y + r.h / 2]; if (side === "right") return [r.x + r.w - 4, r.y + r.h / 2]; if (side === "top") return [r.x + r.w / 2, r.y + 4]; return [r.x + r.w / 2, r.y + r.h - 4]; }
+      if (side === "left") return [r.x, r.y + r.h / 2]; if (side === "right") return [r.x + r.w, r.y + r.h / 2]; if (side === "top") return [r.x + r.w / 2, r.y]; return [r.x + r.w / 2, r.y + r.h];
+    }
+    function outsidePort(r, side, gap = 4) { const [x, y] = port(r, side); if (side === "left") return [x - gap, y]; if (side === "right") return [x + gap, y]; if (side === "top") return [x, y - gap]; return [x, y + gap]; }
+    function sides(a, b) { const dx = b.x + b.w / 2 - (a.x + a.w / 2); const dy = b.y + b.h / 2 - (a.y + a.h / 2); if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? ["right", "left"] : ["left", "right"]; return dy > 0 ? ["bottom", "top"] : ["top", "bottom"]; }
+    function pathBetween(edge) {
+      const a = rect(edge.from); const b = rect(edge.to); const sourceSide = edge.fromSide || sides(a, b)[0]; const targetSide = edge.toSide || sides(a, b)[1]; const s = outsidePort(a, sourceSide); const t = outsidePort(b, targetSide);
+      if (edge.curve === "loop") return `M${s[0]},${s[1]} C${s[0] - 220},${s[1] + 18} ${t[0] + 68},${t[1] + 190} ${t[0]},${t[1]}`;
+      if (sourceSide === "bottom" && targetSide === "top") { const my = (s[1] + t[1]) / 2; return `M${s[0]},${s[1]} C${s[0]},${my} ${t[0]},${my} ${t[0]},${t[1]}`; }
+      if (sourceSide === "right" || sourceSide === "left") { const mx = (s[0] + t[0]) / 2; return `M${s[0]},${s[1]} C${mx},${s[1]} ${mx},${t[1]} ${t[0]},${t[1]}`; }
+      const my = (s[1] + t[1]) / 2; return `M${s[0]},${s[1]} C${s[0]},${my} ${t[0]},${my} ${t[0]},${t[1]}`;
+    }
+    function renderEdges() { [...svg.querySelectorAll("path.edge")].forEach(p => p.remove()); for (const edge of edges) { const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("class", `edge ${edge.kind === "dashed" ? "dashed" : ""}`); p.setAttribute("d", pathBetween(edge)); p.setAttribute("marker-end", edge.kind === "dashed" ? "url(#arrowAlt)" : "url(#arrow)"); svg.appendChild(p); } }
+    function makeDraggable(node) {
+      let start = null;
+      node.addEventListener("pointerdown", (event) => { if (event.target.closest("[contenteditable='true']")) return; const scale = canvas.getBoundingClientRect().width / 1920; start = { x: event.clientX, y: event.clientY, left: parseFloat(node.style.left), top: parseFloat(node.style.top), scale }; node.classList.add("dragging"); node.setPointerCapture(event.pointerId); });
+      node.addEventListener("pointermove", (event) => { if (!start) return; const left = start.left + (event.clientX - start.x) / start.scale; const top = start.top + (event.clientY - start.y) / start.scale; node.style.left = `${Math.max(0, Math.min(1900 - node.offsetWidth, left))}px`; node.style.top = `${Math.max(0, Math.min(1040 - node.offsetHeight, top))}px`; renderEdges(); });
+      node.addEventListener("pointerup", () => { start = null; node.classList.remove("dragging"); });
+    }
+    function collectState() { return { nodes: [...document.querySelectorAll(".node")].map(node => ({ id: node.id, left: node.style.left, top: node.style.top, html: node.innerHTML })), labels: [...document.querySelectorAll(".edge-label")].map(label => ({ id: label.id, left: label.style.left, top: label.style.top, text: label.textContent })) }; }
+    function applyState(state) { if (!state) return; for (const item of state.nodes || []) { const node = document.getElementById(item.id); if (!node) continue; node.style.left = item.left; node.style.top = item.top; node.innerHTML = item.html; } for (const item of state.labels || []) { const label = document.getElementById(item.id); if (!label) continue; label.style.left = item.left; label.style.top = item.top; label.textContent = item.text; } }
+    function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); }
+    function inlineStyles(source, clone) { const sourceEls = [source, ...source.querySelectorAll("*")]; const cloneEls = [clone, ...clone.querySelectorAll("*")]; sourceEls.forEach((sourceEl, index) => { const cloneEl = cloneEls[index]; if (!cloneEl || !(sourceEl instanceof Element)) return; const computed = getComputedStyle(sourceEl); cloneEl.setAttribute("style", Array.from(computed).map(name => `${name}:${computed.getPropertyValue(name)}`).join(";")); }); }
+    async function exportPng() {
+      save(); renderEdges(); const clone = canvas.cloneNode(true); clone.style.transform = "none"; clone.style.position = "relative"; clone.style.left = "0"; clone.style.top = "0"; inlineStyles(canvas, clone);
+      const foreign = `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1056" viewBox="0 0 1920 1056"><foreignObject width="1920" height="1056"><div xmlns="http://www.w3.org/1999/xhtml">${clone.outerHTML}</div></foreignObject></svg>`;
+      const svgBlob = new Blob([foreign], { type: "image/svg+xml;charset=utf-8" }); const url = URL.createObjectURL(svgBlob); const img = new Image(); await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
+      const canvasEl = document.createElement("canvas"); canvasEl.width = 1920; canvasEl.height = 1056; const ctx = canvasEl.getContext("2d"); const bg = getComputedStyle(document.documentElement).getPropertyValue("--page").trim() || "#ffffff"; ctx.fillStyle = bg.startsWith("#") ? bg : "#ffffff"; ctx.fillRect(0, 0, canvasEl.width, canvasEl.height); ctx.drawImage(img, 0, 0); URL.revokeObjectURL(url); const a = document.createElement("a"); a.href = canvasEl.toDataURL("image/png"); a.download = DOWNLOAD_NAME; a.click();
+    }
+    document.querySelectorAll(".node").forEach(makeDraggable);
+    document.querySelectorAll("[contenteditable='true']").forEach(el => { el.addEventListener("input", renderEdges); el.addEventListener("blur", save); });
+    document.getElementById("saveBtn").addEventListener("click", save);
+    document.getElementById("resetBtn").addEventListener("click", () => { localStorage.removeItem(STORAGE_KEY); location.reload(); });
+    document.getElementById("exportBtn").addEventListener("click", async () => { const text = JSON.stringify(collectState(), null, 2); await navigator.clipboard.writeText(text); alert("已复制 JSON 到剪贴板"); });
+    document.getElementById("exportPngBtn").addEventListener("click", () => { exportPng().catch(error => { console.error(error); alert("导出 PNG 失败，请先保存后刷新页面再试。"); }); });
+    applyState(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
+    window.addEventListener("resize", scaleCanvas);
+    scaleCanvas();
+    renderEdges();
+  </script>
+</body>
+</html>
